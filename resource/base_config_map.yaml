@@ -9,7 +9,7 @@ metadata:
 apiVersion: v1
 kind: ConfigMap
 metadata:
-  name: base_map
+  name: base-map
   namespace: fly-k8s
 data:
   name: zhangpanqin
