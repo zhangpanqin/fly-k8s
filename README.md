@@ -183,3 +183,43 @@ kubectl create secret docker-registry regcred \
     -n fly-k8s
 ```
 
+
+
+## ServiceAccount
+
+设置使用 service account 的 token 访问资源
+```shell
+export K8S_NAMESPACE='nginx'
+export SERVICE_ACCOUNT_NAME='nginx'
+# 获取 secret 的名称
+export SECRET_NAME=$(kubectl -n ${K8S_NAMESPACE} get serviceaccount/${SERVICE_ACCOUNT_NAME} -o jsonpath='{.secrets[0].name}')
+# 读取 token
+export TOKEN=$(kubectl -n ${K8S_NAMESPACE} get secret ${SECRET_NAME} -o jsonpath='{.data.token}' | base64 --decode)
+# 配置 service account token
+kubectl config set-credentials ${SERVICE_ACCOUNT_NAME} --token=${TOKEN}
+# 设置当前 context 使用这个 service account
+kubectl config set-context --current --user=${SERVICE_ACCOUNT_NAME}
+```
+
+
+
+
+
+## kubectl command
+
+```shell
+# 查看日志，klf1m -l 将多 container 根据 label 汇聚到一起,全称： kubectl logs --since 1m -f
+klf1m -l app.kubernetes.io/name=terraform
+
+# 重启应用
+kubectl rollout restart deployment nginx -n nginx
+
+# 更新应用
+kubectl patch workspaces.app.terraform.io my-team --type='merge' \
+-p '{"spec": {"secretsMountPath": "/tmp/secrets/sandbox"}}'
+
+k get workspaces.app.terraform.io | awk '{if (NR >= 2) print $1}' | xargs -I {} \
+kubectl patch workspaces.app.terraform.io {} --type='merge' \
+-p '{"spec": {"secretsMountPath": "/tmp/secrets/sandbox"}}'
+```
+
